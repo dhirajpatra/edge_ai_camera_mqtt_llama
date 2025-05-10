@@ -2,7 +2,7 @@
 
 This project demonstrates a lightweight yet scalable **Edge AI microservice architecture**, where:
 
-![Edge AI Microservice Architecture](./images/edge_ai_architecture.png)
+![Edge AI Microservice Architecture](./images/3.png)
 ![Face detection and sharing by MQTT Message broker](./images/1.png)
 ![LLM Message](./images/2.png)
 
