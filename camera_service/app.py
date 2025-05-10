@@ -42,7 +42,9 @@ def capture_and_send():
 
     print("🔍 Checking available video devices in /dev...")
     try:
-        print("📷 Devices:", os.listdir("/dev"))
+        # List devices inside the container - good for debugging
+        dev_files = [f for f in os.listdir("/dev") if f.startswith("video") or f.startswith("media")]
+        print("📷 Devices in /dev:", dev_files)
     except Exception as e:
         print(f"❌ Failed to list /dev: {e}")
 
@@ -55,8 +57,7 @@ def capture_and_send():
     if not cap.isOpened():
         print("❌ Could not open camera.")
     
-    while True:
-        print("🎥 Capturing for 5 seconds...")
+    while True and cap.isOpened():
         start_time = time.time()
         
         # Capture frames for 5 seconds
