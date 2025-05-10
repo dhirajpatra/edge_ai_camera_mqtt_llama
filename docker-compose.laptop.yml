@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # llm_service:
+  #   build:
+  #     context: ./llm_service
+  #   container_name: llm_service
+  #   volumes:
+  #     - ./llm_service/models:/models
+  #     - ./llm_service/models:/app/models
+  #     - shared:/app/shared
+  #   ports:
+  #     - "1884:1883"  # Changing host port to 1884
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #   restart: unless-stopped
+
+  mqtt_broker:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt_broker
+    ports:
+      - "1885:1883"  # Keeping mqtt_broker on 1883
+      - "9002:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    env_file:
+      - .env
+    user: "1883"  # 👈 Set user instead of chown
+    command: ["/usr/sbin/mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
+    restart: unless-stopped
+
+  # api_gateway:
+  #   build:
+  #     context: ./api_gateway
+  #   container_name: api_gateway
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - ./api_gateway:/app
+  #     - ./shared:/app/shared
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - mqtt_broker
+  #     - llm_service
+  #   restart: unless-stopped
+
+  camera_service:
+    build:
+      context: ./camera_service
+      dockerfile: Dockerfile
+    privileged: true
+    devices:
+      - /dev/video0:/dev/video0
+      - /dev/video1:/dev/video1
+      - /dev/media0:/dev/media0
+    container_name: camera_service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./camera_service:/app
+      - shared:/app/shared
+      # - /tmp/.X11-unix:/tmp/.X11-unix
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MQTT_BROKER=mqtt_broker   # 👈 must match the service name above
+      - MQTT_PORT=1883
+      - DISPLAY
+    depends_on:
+      - mqtt_broker
+    restart: unless-stopped
+
+volumes:
+  shared:
+  

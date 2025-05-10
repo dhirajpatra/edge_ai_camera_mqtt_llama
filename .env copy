@@ -1,0 +1,18 @@
+# Common environment variables for LLM and MQTT microservices
+
+# Path to the model inside container
+MODEL_PATH=/app/models/llama-3-1b-q4_0.gguf
+
+# LLM runtime settings
+LLM_CONTEXT_SIZE=512
+LLM_MAX_TOKENS=64
+LLM_THREADS=4
+
+# MQTT settings
+MQTT_HOST=mqtt_broker
+MQTT_PORT=1883
+MQTT_TOPIC_IN=detections
+MQTT_TOPIC_OUT=llm_response
+MQTT_BROKER_HOST=mqtt_broker
+MQTT_BROKER_PORT=1883
+

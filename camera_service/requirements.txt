@@ -1,0 +1,4 @@
+tensorflow>=2.13.0
+paho-mqtt>=1.6.1
+opencv-python
+python-dotenv>=1.0.1

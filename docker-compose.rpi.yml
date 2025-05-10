@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  llm_service:
+    build:
+      context: ./llm_service
+      platforms:
+        - linux/arm64
+    container_name: llm_service
+    volumes:
+      - ./llm_service/models:/app/models
+      - shared:/app/shared
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  mqtt_broker:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt_broker
+    network_mode: host
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    command: bash -c "chown -R 1883:1883 /mosquitto/config /mosquitto/data /mosquitto/log && exec /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf"
+    restart: unless-stopped
+
+  api_gateway:
+    build:
+      context: ./api_gateway
+      platforms:
+        - linux/arm64
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api_gateway:/app
+      - ./shared:/app/shared
+    env_file:
+      - .env
+    depends_on:
+      - mqtt_broker
+      - llm_service
+    restart: unless-stopped
+
+  camera_service:
+    build:
+      context: ./camera_service
+      platforms:
+        - linux/arm64
+    container_name: camera_service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./camera_service:/app
+      - ./shared:/app/shared
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - mqtt_broker
+    restart: unless-stopped
