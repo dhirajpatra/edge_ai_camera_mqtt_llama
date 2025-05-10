@@ -1,123 +1,140 @@
-# 🧠 Edge AI Microservice with LLaMA 3.2 1B (Quantized) using `llama.cpp`
+# 🧠 Edge AI Microservices with LLaMA 3.2 1B (Quantized) using `llama.cpp`
 
-This project sets up a microservice architecture where a camera detection service sends object detection events to an LLM service that replies intelligently using a quantized LLaMA 3.2 1B model powered by [`llama.cpp`](https://github.com/ggerganov/llama.cpp). Communication is via MQTT.
+This project demonstrates a lightweight yet scalable **Edge AI microservice architecture**, where:
 
-You may need to run following command in your system. To get the video url and update into the docker-compose.
+![Edge AI Microservice Architecture](./images/edge_ai_architecture.png)
+![Face detection and sharing by MQTT Message broker](./images/1.png)
+![LLM Message](./images/2.png)
 
-`ls /dev/video*`
-`sudo usermod -aG video $USER`
+* A **camera detection service** performs real-time object detection.
+* An **LLM service** (powered by a quantized LLaMA 3.2 1B model via [`llama.cpp`](https://github.com/ggerganov/llama.cpp)) generates intelligent responses.
+* Communication happens over **MQTT** using a broker (e.g., Mosquitto).
 
+You can **swap models** and **scale components independently** across devices (e.g., Raspberry Pi, edge boxes, laptops), thanks to its fully containerized microservice design.
 
 ---
 
-## 🖥️ System 1: Laptop (Intel i5 + 32GB RAM)
+## 🚀 Features
+
+* ⚙️ Distributed microservices architecture
+* 📦 Docker + Docker Compose deployment
+* 🧠 Lightweight quantized LLM (customizable)
+* 📡 MQTT-based communication between services
+* 📷 Edge device compatibility (e.g., Raspberry Pi, microcontrollers)
+
+---
+
+## 📦 Services
+
+| Service          | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| `llm_service`    | LLaMA 3.2 1B Quantized model via llama.cpp     |
+| `camera_service` | Real-time object detection (OpenCV/TensorFlow) |
+| `mqtt_broker`    | Mosquitto MQTT Broker                          |
+| `api_gateway`    | REST/HTTP gateway (optional UI integration)    |
+
+---
+
+## 💻 System 1: Laptop (Intel i5 / 32GB RAM)
 
 ### ✅ Prerequisites
 
-- Python 3.10+
-- Docker & Docker Compose
-- Download LLaMA 3.2 1B quantized model (e.g. `bartowski/Llama-3.2-1B-Instruct-GGUF` from TheBloke or convert yourself)
-- MQTT broker (e.g., Mosquitto)
+* Python 3.10+
+* Docker & Docker Compose
+* MQTT broker (Mosquitto)
+* Quantized `.gguf` model (e.g., `Llama-3.2-1B-Instruct-Q4_0` from TheBloke)
 
 ### 📁 Folder Structure
 
 ```
-
-llm\_service/
+llm_service/
 ├── app.py
 ├── Dockerfile
 ├── requirements.txt
 └── models/
-└── llama-3-1b-q4\_0.gguf
+    └── llama-3.2-1b-q4_0.gguf
+```
 
-````
-
-### 🧪 Run Locally
+### ▶️ Run with Docker Compose
 
 ```bash
-docker build -t llm_service .
-docker run -v $(pwd)/models:/app/models -p 1883:1883 llm_service
+docker-compose -f docker-compose.laptop.yml up --build --remove-orphans
 ```
+
+> This builds all services and removes unused containers.
 
 ---
 
-## 🍓 System 2: Raspberry Pi 4 (4GB or 8GB RAM)
+## 🍓 System 2: Raspberry Pi 4 (4GB/8GB)
 
 ### ✅ Prerequisites
 
 * Raspberry Pi OS 64-bit
 * Docker & Docker Compose
-* Dockerfile will automatically download same `bartowski/Llama-3.2-1B-Instruct-GGUF` model
-* Optional: Mosquitto installed for local MQTT broker
+* Optional: Mosquitto for local MQTT
 
 ### ⚙️ Build for ARM64
 
-If building on a different architecture (e.g. x86):
-
 ```bash
-docker buildx build --platform linux/arm64 -t llm_service .
+docker buildx build --platform linux/arm64 -t llm_service ./llm_service
 ```
 
-Or build directly on Raspberry Pi:
-
-```bash
-docker build -t llm_service .
-```
-
-### 🏃 Run
+### ▶️ Run
 
 ```bash
 docker run -v $(pwd)/models:/app/models --network host llm_service
 ```
 
-> Use `--network host` on Raspberry Pi if running Mosquitto locally.
+> Use `--network host` if Mosquitto runs locally on the Pi.
 
 ---
 
-## 📡 MQTT Topics
+## 🔗 MQTT Topics
 
-* `detections`: input topic for camera\_service object detection
-* `llm_response`: output topic where LLM replies are published
-
----
-
-## 📥 Download Prebuilt Models (Optional)
-
-You can download quantized models from:
-
-* [TheBloke's HuggingFace Repo](https://huggingface.co/TheBloke)
-* Choose: `bartowski/Llama-3.2-1B-Instruct-GGUF`
-
-Place the `.gguf` file in `llm_service/models/`.
+| Topic          | Purpose                         |
+| -------------- | ------------------------------- |
+| `detections`   | Input: object detection events  |
+| `llm_response` | Output: LLM-generated responses |
 
 ---
 
-## 📌 Notes
+## 📥 Download Models
 
-* `n_threads` can be set to `2` or `4` on Raspberry Pi for better performance.
-* On Pi 4, total memory usage will be \~1.7–2.2 GB (use swap if needed).
-* Use minimal prompt and small context size (≤512) to reduce latency.
+Download `.gguf` quantized models from:
 
----
+* [TheBloke on Hugging Face](https://huggingface.co/TheBloke)
+* Suggested: `bartowski/Llama-3.2-1B-Instruct-GGUF`
 
-## 🧩 Coming Soon
-
-* `camera_service/` (TensorFlow/OpenVINO object detection)
-* UI Dashboard (Optional)
-* Logging and metrics
+Place them in: `llm_service/models/`.
 
 ---
 
-## 🤝 Contribution
+## ⚠️ System Tips
 
-We welcome contributions! Please follow these guidelines:
+* Run: `ls /dev/video*` to identify camera device
+* Add user permission: `sudo usermod -aG video $USER`
+* Use swap on Raspberry Pi to manage memory
+* Tune `n_threads` and context size for optimal performance
 
-- Fork the repository and create a new branch (`feature/your-feature-name`)
-- Follow existing coding conventions and directory structure
-- Write clear commit messages
-- Test your code before pushing
-- Submit a Pull Request with a clear description of changes
+---
 
-For major changes, please open an issue first to discuss what you would like to change.
+## 🔜 Coming Soon
+
+* `camera_service/`: Real-time detection via OpenVINO/TensorFlow
+* UI Dashboard (for interactions)
+* Metrics & Logging
+
+---
+
+## 🤝 Contributions
+
+We welcome contributions:
+
+1. Fork & branch: `feature/your-feature-name`
+2. Follow structure & style
+3. Test before pushing
+4. Submit a PR with description
+
+For major changes, raise an issue first.
 
 ---

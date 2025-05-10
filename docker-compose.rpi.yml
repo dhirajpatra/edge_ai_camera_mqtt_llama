@@ -20,19 +20,22 @@ services:
   mqtt_broker:
     image: eclipse-mosquitto:2.0
     container_name: mqtt_broker
-    network_mode: host
+    ports:
+      - "1885:1883"  # Keeping mqtt_broker on 1883
+      - "9002:9001"
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
-    command: bash -c "chown -R 1883:1883 /mosquitto/config /mosquitto/data /mosquitto/log && exec /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf"
+    env_file:
+      - .env
+    user: "1883"  # 👈 Set user instead of chown
+    command: ["/usr/sbin/mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
     restart: unless-stopped
 
   api_gateway:
     build:
       context: ./api_gateway
-      platforms:
-        - linux/arm64
     container_name: api_gateway
     ports:
       - "8080:8080"
@@ -49,16 +52,30 @@ services:
   camera_service:
     build:
       context: ./camera_service
-      platforms:
-        - linux/arm64
+      dockerfile: Dockerfile
+    privileged: true
+    devices:
+      - /dev/video0:/dev/video0
+      # - /dev/video1:/dev/video1
+      # - /dev/media0:/dev/media0
     container_name: camera_service
     ports:
       - "5000:5000"
     volumes:
       - ./camera_service:/app
-      - ./shared:/app/shared
+      - shared:/app/shared
+      # - /tmp/.X11-unix:/tmp/.X11-unix
+    env_file:
+      - .env
     environment:
       - PYTHONUNBUFFERED=1
+      - MQTT_BROKER=mqtt_broker   # 👈 must match the service name above
+      - MQTT_PORT=1883
+      - DISPLAY
+      - STARTUP_DELAY=10 
     depends_on:
       - mqtt_broker
     restart: unless-stopped
+
+volumes:
+  shared:
