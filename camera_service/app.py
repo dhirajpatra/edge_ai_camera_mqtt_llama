@@ -68,10 +68,7 @@ def capture_and_send():
                 _, img_encoded = cv2.imencode('.jpg', processed_frame)
                 img_bytes = img_encoded.tobytes()
                 mqtt_client.publish(MQTT_TOPIC, img_bytes)
-                print("✅ Published frame to MQTT")
-            else:
-                print("❌ Failed to capture frame.")
-                time.sleep(0.2)
+                time.sleep(5)
 
         cap.release()
         cv2.destroyAllWindows()

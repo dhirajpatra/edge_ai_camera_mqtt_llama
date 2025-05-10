@@ -1,21 +1,21 @@
 version: '3.8'
 
 services:
-  # llm_service:
-  #   build:
-  #     context: ./llm_service
-  #   container_name: llm_service
-  #   volumes:
-  #     - ./llm_service/models:/models
-  #     - ./llm_service/models:/app/models
-  #     - shared:/app/shared
-  #   ports:
-  #     - "1884:1883"  # Changing host port to 1884
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #   restart: unless-stopped
+  llm_service:
+    build:
+      context: ./llm_service
+    container_name: llm_service
+    volumes:
+      - ./llm_service/models:/models
+      - ./llm_service/models:/app/models
+      - shared:/app/shared
+    ports:
+      - "1884:1883"  # Changing host port to 1884
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
 
   mqtt_broker:
     image: eclipse-mosquitto:2.0
@@ -33,21 +33,21 @@ services:
     command: ["/usr/sbin/mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
     restart: unless-stopped
 
-  # api_gateway:
-  #   build:
-  #     context: ./api_gateway
-  #   container_name: api_gateway
-  #   ports:
-  #     - "8080:8080"
-  #   volumes:
-  #     - ./api_gateway:/app
-  #     - ./shared:/app/shared
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - mqtt_broker
-  #     - llm_service
-  #   restart: unless-stopped
+  api_gateway:
+    build:
+      context: ./api_gateway
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api_gateway:/app
+      - ./shared:/app/shared
+    env_file:
+      - .env
+    depends_on:
+      - mqtt_broker
+      - llm_service
+    restart: unless-stopped
 
   camera_service:
     build:
