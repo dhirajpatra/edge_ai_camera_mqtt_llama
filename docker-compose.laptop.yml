@@ -56,8 +56,8 @@ services:
     privileged: true
     devices:
       - /dev/video0:/dev/video0
-      - /dev/video1:/dev/video1
-      - /dev/media0:/dev/media0
+      # - /dev/video1:/dev/video1
+      # - /dev/media0:/dev/media0
     container_name: camera_service
     ports:
       - "5000:5000"
@@ -72,6 +72,7 @@ services:
       - MQTT_BROKER=mqtt_broker   # 👈 must match the service name above
       - MQTT_PORT=1883
       - DISPLAY
+      - STARTUP_DELAY=10 
     depends_on:
       - mqtt_broker
     restart: unless-stopped

@@ -34,6 +34,7 @@ mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 def process_frame(frame):
     """Apply any image processing to the frame, if needed."""
     # Example: Convert to grayscale (you can add more processing here)
+    cv2.resize(frame, (640, 480))
     return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 def capture_and_send():    
@@ -69,7 +70,7 @@ def capture_and_send():
                 _, img_encoded = cv2.imencode('.jpg', processed_frame)
                 img_bytes = img_encoded.tobytes()
                 mqtt_client.publish(MQTT_TOPIC, img_bytes)
-                time.sleep(5)
+                time.sleep(60)
 
         cap.release()
         cv2.destroyAllWindows()
